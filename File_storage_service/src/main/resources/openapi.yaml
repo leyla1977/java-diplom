@@ -1,0 +1,133 @@
+openapi: 3.0.3
+info:
+  title: File Storage Service API
+  version: 1.0.0
+  description: REST API for file storage with authentication
+
+servers:
+  - url: http://localhost:8080
+    description: Local server
+
+paths:
+  /login:
+    post:
+      tags:
+        - Authentication
+      summary: User login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Successful login
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '401':
+          description: Unauthorized
+
+  /file:
+    get:
+      tags:
+        - Files
+      summary: Get file list
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: File list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FileResponse'
+
+    post:
+      tags:
+        - Files
+      summary: Upload file
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: File uploaded successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileResponse'
+
+  /file/{filename}:
+    delete:
+      tags:
+        - Files
+      summary: Delete file
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: filename
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: File deleted successfully
+        '404':
+          description: File not found
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    LoginRequest:
+      type: object
+      required:
+        - login
+        - password
+      properties:
+        login:
+          type: string
+          example: "user@example.com"
+        password:
+          type: string
+          example: "password123"
+
+    LoginResponse:
+      type: object
+      properties:
+        auth-token:
+          type: string
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+
+    FileResponse:
+      type: object
+      properties:
+        filename:
+          type: string
+          example: "document.pdf"
+        size:
+          type: integer
+          example: 1048576
+        uploadedAt:
+          type: string
+          format: date-time
+          example: "2024-01-15T10:30:00Z"
